@@ -1,5 +1,3 @@
-// src/components/sections/Hero.tsx
-
 "use client";
 
 import Image from "next/image";
@@ -12,7 +10,7 @@ import DecryptedText from "@/components/ui/DecryptedText";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen overflow-hidden bg-linear-to-b from-black via-[#040404] to-[#050305] text-white">
+    <section className="relative min-h-screen overflow-x-hidden bg-linear-to-b from-black via-[#040404] to-[#050305] text-white">
       {/* Dot Grid Background */}
 
       <div className="absolute inset-0 opacity-60">
@@ -59,7 +57,8 @@ export default function Hero() {
                   uppercase
                   leading-[0.82]
                   tracking-[-0.04em]
-                  text-[80px]
+                  text-5xl
+                  sm:text-6xl
                   md:text-[128px]
                   xl:text-[170px]
                   transition-colors
@@ -82,7 +81,7 @@ export default function Hero() {
                   revealDirection="center"
                   className="text-white font-semibold uppercase"
                   encryptedClassName="text-zinc-500 uppercase"
-                  parentClassName="block text-[72px] md:text-[120px] xl:text-[165px] font-heading uppercase leading-[0.82] tracking-[-0.08em]"
+                  parentClassName="block text-4xl sm:text-5xl md:text-[120px] xl:text-[165px] font-heading uppercase leading-[0.82] tracking-[-0.08em]"
                 />
               </div>
             </div>
@@ -129,13 +128,13 @@ export default function Hero() {
               <div className="absolute -inset-10 bg-white/5 blur-3xl rounded-[28px]" />
 
               <Image
-  src="/images/anime-pfp.png"
-  alt="Anime Version"
-  fill
-  priority
-  sizes="(max-width: 768px) 50vw, 300px"
-  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-/>
+                src="/images/anime-pfp.png"
+                alt="Anime Version"
+                fill
+                priority
+                sizes="(max-width: 768px) 50vw, 300px"
+                className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+              />
               <div className="absolute inset-0 bg-linear-to-br from-white/8 via-white/2 to-black/20 group-hover:via-white/4 transition-colors duration-300 pointer-events-none" />
 
               <div className="absolute inset-x-0 bottom-0 py-8 px-6 bg-linear-to-t from-black/90 via-black/75 to-transparent">
