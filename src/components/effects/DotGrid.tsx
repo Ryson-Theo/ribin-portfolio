@@ -274,11 +274,11 @@ export default function DotGrid({
   return (
     <div
       ref={wrapperRef}
-      className={`absolute inset-0 ${className}`}
+      className={`absolute inset-0 pointer-events-none select-none ${className}`}
     >
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 h-full w-full"
+        className="absolute inset-0 h-full w-full pointer-events-none"
       />
     </div>
   );
