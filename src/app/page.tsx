@@ -11,26 +11,21 @@ import Footer from "@/components/sections/footer";
 
 export default function Home() {
   return (
-    <main
-      className="
-        min-h-screen
-        bg-black
-        text-white
-        overflow-x-hidden
-      "
-    >
+    <main className="w-full bg-black text-white">
       <Navbar />
 
-      <Hero />
-      <About />
-      <Experience />
-      <Projects />
-      <Designs />
-      <Research />
-      <Contact />
-      <Expertise />
-      <Footer />
-
+      {/* This wrapper safely clips horizontal overflow without breaking native mobile scrolling */}
+      <div className="relative w-full overflow-x-hidden flex flex-col">
+        <Hero />
+        <About />
+        <Experience />
+        <Projects />
+        <Designs />
+        <Research />
+        <Contact />
+        <Expertise />
+        <Footer />
+      </div>
     </main>
   );
 }

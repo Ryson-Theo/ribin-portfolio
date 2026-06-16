@@ -13,7 +13,7 @@ body {
   background: #000;
   color: white;
   font-family: Inter, sans-serif;
-  overflow-x: hidden;
+  /* Removed overflow-x: hidden to fix mobile Safari/Chrome touch scrolling lockups */
 }
 
 .project-scroll::-webkit-scrollbar {
@@ -33,7 +33,6 @@ body {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-
 
 .font-heading,
 h1,
