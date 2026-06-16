@@ -16,7 +16,7 @@ export default function Home() {
         min-h-screen
         bg-black
         text-white
-        overflow-hidden
+        overflow-x-hidden
       "
     >
       <Navbar />
