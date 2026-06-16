@@ -13,7 +13,7 @@ export default function Hero() {
       className="relative min-h-screen w-full overflow-x-hidden bg-linear-to-b from-black via-[#040404] to-[#050305] text-white flex flex-col justify-center"
     >
       
-      {/* Dot Grid Background Layer - Desktop Only */}
+      {/* Dot Grid Background Layer - Completely removed on mobile to stop touch gesture trapping */}
       <div className="absolute inset-0 opacity-60 pointer-events-none z-0 hidden lg:block">
         <DotGrid
           dotSize={1.8}
@@ -41,13 +41,14 @@ export default function Hero() {
             </p>
 
             <div className="group relative inline-block w-full">
+              {/* Responsive Text Scaling prevents viewport clipping */}
               <h1 className="relative font-heading uppercase leading-[0.85] tracking-[-0.04em] text-3xl sm:text-5xl md:text-[100px] lg:text-[120px] xl:text-[150px] transition-opacity duration-300 lg:group-hover:opacity-0">
                 FULL STACK
                 <br />
                 DEVELOPER
               </h1>
 
-              {/* Decrypted Text Animated Layer - Cleaned up display layout classes */}
+              {/* Decrypted Text Animated Layer - Safely limited via hidden lg:flex */}
               <div className="absolute inset-0 items-center justify-start opacity-0 pointer-events-none transition-opacity duration-300 lg:group-hover:opacity-100 hidden lg:flex">
                 <DecryptedText
                   text={portfolio.name}
@@ -89,7 +90,7 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Card Avatar */}
+          {/* RIGHT COLUMN: Premium Card Avatar */}
           <div className="flex justify-center lg:justify-end lg:pr-8 order-0 lg:order-1 mt-2 lg:mt-0">
             <div className="relative w-60 h-72 sm:w-72 sm:h-96 md:w-80 md:h-104 rounded-[28px] overflow-hidden shadow-2xl lg:translate-x-6 lg:-translate-y-8 transform transition-all duration-500 group border border-white/15 backdrop-blur-sm">
               

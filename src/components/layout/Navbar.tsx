@@ -22,14 +22,15 @@ const navItems: NavItem[] = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Safely manage structural document locks when mobile overlay triggers
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     }
     return () => {
-      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     };
   }, [isOpen]);
 
@@ -88,7 +89,7 @@ export default function Navbar() {
 
           <div className="hidden sm:block w-px h-5 bg-white/10 shrink-0" />
 
-          {/* Desktop Links */}
+          {/* Desktop Core Links */}
           <div className="hidden lg:flex items-center gap-6 xl:gap-8 shrink-0">
             {navItems.map((item) => (
               <Link
@@ -110,7 +111,7 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Mobile Hamburger Toggle */}
+          {/* Mobile Interactive Toggle Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="flex lg:hidden flex-col items-center justify-center w-8 h-8 gap-1.5 focus:outline-none z-50 cursor-pointer"
@@ -135,7 +136,7 @@ export default function Navbar() {
         </nav>
       </header>
 
-      {/* Mobile Drawer Overlay */}
+      {/* Fullscreen Mobile Drawer Layer - Uses conditional interactive mapping */}
       <div
         className={`fixed inset-0 bg-black/95 backdrop-blur-3xl z-40 lg:hidden flex flex-col items-center justify-center transition-all duration-500 ease-in-out ${
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
