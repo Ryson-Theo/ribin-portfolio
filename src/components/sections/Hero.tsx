@@ -8,7 +8,10 @@ import DecryptedText from "@/components/ui/DecryptedText";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen w-full overflow-x-hidden bg-linear-to-b from-black via-[#040404] to-[#050305] text-white">
+    <section 
+      id="hero" 
+      className="relative min-h-screen w-full overflow-x-hidden bg-linear-to-b from-black via-[#040404] to-[#050305] text-white flex flex-col justify-center"
+    >
       
       {/* Dot Grid Background Layer */}
       <div className="absolute inset-0 opacity-60 pointer-events-none z-0">
@@ -27,8 +30,8 @@ export default function Hero() {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent)] mix-blend-overlay" />
       </div>
 
-      {/* Hero Content Container */}
-      <div className="relative z-20 container mx-auto px-4 lg:px-8 min-h-screen flex items-center pt-28 pb-16 lg:py-0">
+      {/* Hero Content Container - Tighter, balanced padding configuration */}
+      <div className="relative z-20 container mx-auto px-4 lg:px-8 pt-24 pb-16 sm:pt-28 lg:pt-32 lg:pb-20 w-full">
         <div className="grid lg:grid-cols-[1.7fr_0.5fr] gap-10 lg:gap-12 items-center w-full">
           
           {/* LEFT COLUMN: Main Typography & CTA Blocks */}
