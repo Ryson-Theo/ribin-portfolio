@@ -1,26 +1,153 @@
 @import "tailwindcss";
+@import "@fontsource/syne";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #000;
+  color: white;
+  font-family: Inter, sans-serif;
+  overflow-x: hidden;
+}
+
+.project-scroll::-webkit-scrollbar {
+  height: 0;
+}
+
+.project-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+
+.font-heading,
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Syne", sans-serif;
+}
+
+.font-italic {
+  font-family: Georgia, serif;
+  font-style: italic;
+}
+
+::selection {
+  background: white;
+  color: black;
+}
+
+body::before {
+  content: "";
+
+  position: fixed;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(255,255,255,0.06),
+      transparent 60%
+    );
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+.glass {
+  background: rgba(255,255,255,0.03);
+
+  backdrop-filter: blur(20px);
+
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  animation: marquee 24s linear infinite;
+}
+
+@keyframes flow-menu {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.flowing-menu {
+  position: relative;
+}
+
+.flowing-menu-track {
+  display: inline-flex;
+  gap: 1rem;
+  animation: flow-menu 20s linear infinite;
+}
+
+/* LED indicator for project cards */
+@keyframes led-blink {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.led-dot {
+  display: inline-block;
+  border-radius: 9999px;
+  width: 0.375rem;
+  height: 0.375rem;
+  opacity: 0;
+  transform-origin: center;
+  animation-name: led-blink;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  animation-play-state: paused;
+}
+
+.led-dot[style] {
+  /* delay is passed inline via style attribute */
+}
+
+/* run LED when parent group is hovered */
+.group:hover .led-dot,
+.group:focus-within .led-dot {
+  opacity: 1;
+  animation-play-state: running;
 }
