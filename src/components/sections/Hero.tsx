@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import DotGrid from "@/components/effects/DotGrid";
 import { portfolio } from "@/data/portfolio";
@@ -7,22 +8,37 @@ import { Button } from "@/components/ui/button";
 import DecryptedText from "@/components/ui/DecryptedText";
 
 export default function Hero() {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Safely detect layout size on the client to prevent interactive background scripts from loading on mobile
+  useEffect(() => {
+    const checkMatch = () => setIsDesktop(window.innerWidth >= 1024);
+    checkMatch();
+    window.addEventListener("resize", checkMatch);
+    return () => window.removeEventListener("resize", checkMatch);
+  }, []);
+
   return (
     <section 
       id="hero" 
-      className="relative min-h-screen w-full overflow-x-hidden bg-linear-to-b from-black via-[#040404] to-[#050305] text-white flex flex-col justify-center"
+      // REMOVED overflow-x-hidden from here to prevent mobile viewport boundary collapse
+      className="relative min-h-screen w-full bg-linear-to-b from-black via-[#040404] to-[#050305] text-white flex flex-col justify-center"
     >
       
-      {/* Dot Grid Background Layer - Completely removed on mobile to stop touch gesture trapping */}
-      <div className="absolute inset-0 opacity-60 pointer-events-none z-0 hidden lg:block">
-        <DotGrid
-          dotSize={1.8}
-          gap={22}
-          baseColor="#262626"
-          activeColor="#ffffff"
-          proximity={150}
-        />
-      </div>
+      {/* CRITICAL FIX: Changed from CSS hiding to structural React execution guard. 
+        DotGrid and its internal touch event listeners will now NEVER mount or execute on mobile screens.
+      */}
+      {isDesktop && (
+        <div className="absolute inset-0 opacity-60 pointer-events-none z-0">
+          <DotGrid
+            dotSize={1.8}
+            gap={22}
+            baseColor="#262626"
+            activeColor="#ffffff"
+            proximity={150}
+          />
+        </div>
+      )}
 
       {/* Modern Noise & Radial Overlay */}
       <div className="absolute inset-0 pointer-events-none z-10">
@@ -41,7 +57,6 @@ export default function Hero() {
             </p>
 
             <div className="group relative inline-block w-full">
-              {/* Responsive Text Scaling prevents viewport clipping */}
               <h1 className="relative font-heading uppercase leading-[0.85] tracking-[-0.04em] text-3xl sm:text-5xl md:text-[100px] lg:text-[120px] xl:text-[150px] transition-opacity duration-300 lg:group-hover:opacity-0">
                 FULL STACK
                 <br />

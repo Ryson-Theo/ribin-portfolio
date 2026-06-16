@@ -14,8 +14,8 @@ export default function Home() {
     <main className="w-full bg-black text-white">
       <Navbar />
 
-      {/* This wrapper safely clips horizontal overflow without breaking native mobile scrolling */}
-      <div className="relative w-full overflow-x-hidden flex flex-col">
+      {/* CHANGED overflow-x-hidden to overflow-x-clip to restore native mobile touch scrolling */}
+      <div className="relative w-full overflow-x-clip flex flex-col">
         <Hero />
         <About />
         <Experience />
