@@ -21,10 +21,13 @@ export default function Hero() {
   return (
     <section 
       id="hero" 
+      // REMOVED overflow-x-hidden from here to prevent mobile viewport boundary collapse
       className="relative min-h-screen w-full bg-linear-to-b from-black via-[#040404] to-[#050305] text-white flex flex-col justify-center"
     >
       
-      {/* Background DotGrid Layer */}
+      {/* CRITICAL FIX: Changed from CSS hiding to structural React execution guard. 
+        DotGrid and its internal touch event listeners will now NEVER mount or execute on mobile screens.
+      */}
       {isDesktop && (
         <div className="absolute inset-0 opacity-60 pointer-events-none z-0">
           <DotGrid
@@ -37,10 +40,10 @@ export default function Hero() {
         </div>
       )}
 
-      {/* Fixed Noise & Radial Overlay Layers */}
+      {/* Modern Noise & Radial Overlay */}
       <div className="absolute inset-0 pointer-events-none z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.03),transparent_30%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent)] mix-blend-overlay pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.03),transparent_30%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent)] mix-blend-overlay" />
       </div>
 
       {/* Hero Content Container */}
@@ -83,16 +86,15 @@ export default function Hero() {
               Creating modern digital products through design, engineering, and AI exploration.
             </blockquote>
 
-            {/* FIXED CTA BUTTON WRAPPER */}
-            <div className="flex flex-wrap gap-4 mt-8 md:mt-12 justify-start relative z-30">
-              <Button asChild className="rounded-full bg-white text-black px-8 h-12 lg:hover:scale-[1.02] shadow-lg transition-transform cursor-pointer text-sm font-semibold">
-                <a href="https://github.com/Ryson-Theo" target="_blank" rel="noreferrer" className="w-full h-full flex items-center justify-center">
+            <div className="flex flex-wrap gap-4 mt-8 md:mt-12 justify-start">
+              <Button asChild className="rounded-full bg-white text-black px-8 h-12 hover:scale-[1.02] shadow-lg transition-transform cursor-pointer text-sm font-semibold">
+                <a href="https://github.com/Ryson-Theo" target="_blank" rel="noreferrer">
                   View Work
                 </a>
               </Button>
 
-              <Button asChild variant="outline" className="rounded-full px-8 h-12 border-white/10 bg-white/5 backdrop-blur-xl lg:hover:scale-[1.02] transition-transform cursor-pointer text-sm font-medium text-white">
-                <a href="https://www.linkedin.com/in/ribin-k-roy/" target="_blank" rel="noreferrer" className="w-full h-full flex items-center justify-center">
+              <Button asChild variant="outline" className="rounded-full px-8 h-12 border-white/10 bg-white/5 backdrop-blur-xl hover:scale-[1.02] transition-transform cursor-pointer text-sm font-medium text-white">
+                <a href="https://www.linkedin.com/in/ribin-k-roy/" target="_blank" rel="noreferrer">
                   Let&apos;s Connect
                 </a>
               </Button>

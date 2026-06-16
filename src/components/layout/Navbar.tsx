@@ -136,10 +136,10 @@ export default function Navbar() {
         </nav>
       </header>
 
-      {/* FIXED MOBILE DRAWER LAYER */}
+      {/* Fullscreen Mobile Drawer Layer - Uses conditional interactive mapping */}
       <div
         className={`fixed inset-0 bg-black/95 backdrop-blur-3xl z-40 lg:hidden flex flex-col items-center justify-center transition-all duration-500 ease-in-out ${
-          isOpen ? "opacity-100 pointer-events-auto visible" : "opacity-0 pointer-events-none invisible"
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       >
         <div className="flex flex-col items-center gap-8 text-center">
