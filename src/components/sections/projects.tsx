@@ -17,7 +17,7 @@ const GitHubIcon = ({ className }: { className?: string }) => (
 const projects = [
   {
     title: "Interactive Developer Portfolio",
-    description: "A high-performance, responsive portfolio engineered with Next.js 16 (Turbopack), TypeScript, and Tailwind CSS. Fully type-safe and optimized for instant static delivery via Vercel.",
+    description: "Responsive, type-safe portfolio built with Next.js 16 and Tailwind. Instant static delivery, deployed on Vercel.",
     source: "https://github.com/Ryson-Theo/ribin-portfolio",
     preview: "https://ribin-portfolio.vercel.app",
     image: "/images/portfolio-preview.png",
