@@ -1,28 +1,28 @@
-﻿'use client';
+﻿"use client";
 
-import React, { useState } from 'react';
-import PixelBlast from '@/components/ui/PixelBlast';
+import React, { useState } from "react";
+import PixelBlast from "@/components/ui/PixelBlast";
 
 export default function Contact() {
-  const [formState, setFormState] = useState({ name: '', email: '', message: '' });
-  const [botField, setBotField] = useState('');
+  const [formState, setFormState] = useState({ name: "", email: "", message: "" });
+  const [botField, setBotField] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const isAllowedEmail = (email: string): boolean => {
     const blacklistedDomains = [
-      'mailinator.com', '10minutemail.com', 'tempmail.com',
-      'guerrillamail.com', 'sharklasers.com', 'dispostable.com'
+      "mailinator.com", "10minutemail.com", "tempmail.com",
+      "guerrillamail.com", "sharklasers.com", "dispostable.com"
     ];
-    const domain = email.split('@')[1]?.toLowerCase();
+    const domain = email.split("@")[1]?.toLowerCase();
     return !!domain && !blacklistedDomains.includes(domain);
   };
 
   const checkRateLimit = (): boolean => {
     const now = Date.now();
     const cooldown = 60000;
-    const lastSubmit = localStorage.getItem('form_last_submit');
+    const lastSubmit = localStorage.getItem("form_last_submit");
 
     if (lastSubmit) {
       const timePassed = now - parseInt(lastSubmit, 10);
@@ -33,12 +33,12 @@ export default function Contact() {
       }
     }
 
-    const rawHistory = localStorage.getItem('form_submit_history');
+    const rawHistory = localStorage.getItem("form_submit_history");
     const history = rawHistory ? (JSON.parse(rawHistory) as number[]) : [];
     const recent = history.filter((timestamp) => now - timestamp < 60 * 60 * 1000);
 
     if (recent.length >= 5) {
-      setErrorMessage('Too many messages sent. Please wait at least an hour before trying again.');
+      setErrorMessage("Too many messages sent. Please wait at least an hour before trying again.");
       return false;
     }
 
@@ -47,26 +47,26 @@ export default function Contact() {
 
   const recordSubmission = () => {
     const now = Date.now();
-    const rawHistory = localStorage.getItem('form_submit_history');
+    const rawHistory = localStorage.getItem("form_submit_history");
     const history = rawHistory ? (JSON.parse(rawHistory) as number[]) : [];
     const recent = history.filter((timestamp) => now - timestamp < 60 * 60 * 1000);
-    localStorage.setItem('form_submit_history', JSON.stringify([...recent, now]));
-    localStorage.setItem('form_last_submit', now.toString());
+    localStorage.setItem("form_submit_history", JSON.stringify([...recent, now]));
+    localStorage.setItem("form_last_submit", now.toString());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
+    setErrorMessage("");
+    setSuccessMessage("");
 
     if (botField.trim()) {
-      setErrorMessage('Spam detected. Submission blocked.');
+      setErrorMessage("Spam detected. Submission blocked.");
       return;
     }
 
     if (!checkRateLimit()) return;
     if (!isAllowedEmail(formState.email)) {
-      setErrorMessage('Please use a valid, stable email provider.');
+      setErrorMessage("Please use a valid, stable email provider.");
       return;
     }
 
@@ -76,10 +76,10 @@ export default function Contact() {
       const endpoint = `https://formsubmit.co/ajax/${process.env.NEXT_PUBLIC_FORMSUBMIT_ID}`;
       
       const res = await fetch(endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          "Accept": "application/json",
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: formState.name,
@@ -90,24 +90,24 @@ export default function Contact() {
 
       if (res.ok) {
         recordSubmission();
-        setSuccessMessage('Message sent successfully. I will respond as soon as possible.');
-        setFormState({ name: '', email: '', message: '' });
-        setBotField('');
+        setSuccessMessage("Message sent successfully. I will respond as soon as possible.");
+        setFormState({ name: "", email: "", message: "" });
+        setBotField("");
       } else {
         const data = await res.json().catch(() => ({}));
-        setErrorMessage(data?.message || 'Failed to send message. Please try emailing directly.');
+        setErrorMessage(data?.message || "Failed to send message. Please try emailing directly.");
       }
     } catch {
-      
-      setErrorMessage('An unexpected transmission error occurred.');
+      setErrorMessage("An unexpected transmission error occurred.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <section id="contact" className="relative py-24 border-t border-white/10 bg-black overflow-hidden">
-      <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
+    <section id="contact" className="relative py-20 md:py-32 lg:py-40 border-t border-white/10 bg-black overflow-hidden">
+      {/* Background animation container - pointer events none so it doesn't trap mobile touches */}
+      <div className="absolute inset-0 w-full h-full pointer-events-none z-0 transform-gpu">
         <PixelBlast
           className="absolute inset-0"
           variant="circle"
@@ -130,18 +130,22 @@ export default function Contact() {
         />
       </div>
 
-      <div className="container mx-auto px-8 lg:px-16 relative z-10">
+      <div className="container mx-auto px-4 sm:px-8 lg:px-16 relative z-10">
         <div className="mx-auto max-w-6xl">
-          <div className="relative overflow-hidden rounded-4xl border border-white/10 bg-white/5 shadow-2xl shadow-sky-500/10 backdrop-blur-3xl">
-            <div className="absolute inset-0 bg-black/30" />
-            <div className="relative grid gap-10 lg:grid-cols-2 p-8 md:p-10">
+          {/* Glassmorphic Card - Hardware accelerated */}
+          <div className="relative overflow-hidden rounded-4xl border border-white/10 bg-white/5 shadow-2xl shadow-sky-500/10 backdrop-blur-3xl transform-gpu">
+            <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+            
+            <div className="relative grid gap-10 lg:grid-cols-2 p-6 sm:p-8 md:p-10">
+              
+              {/* Left Column: Copy & Links */}
               <div className="flex flex-col justify-between gap-8">
                 <div className="space-y-6">
                   <p className="text-xs font-mono tracking-[0.35em] text-sky-300 uppercase">Get in Touch</p>
                   <h2 className="font-heading text-4xl md:text-5xl text-white leading-tight tracking-tight">
                     Let&apos;s build something exceptional.
                   </h2>
-                  <p className="text-sm md:text-base leading-7 text-slate-300 max-w-xl">
+                  <p className="text-sm md:text-base leading-relaxed md:leading-7 text-slate-300 max-w-xl">
                     I am currently accepting new collaborations and strategic project inquiries. Please share your requirements below to initiate a formal conversation.
                   </p>
                 </div>
@@ -174,8 +178,10 @@ export default function Contact() {
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <form onSubmit={handleSubmit} className="w-full max-w-2xl space-y-6">
+              {/* Right Column: Form */}
+              <div className="flex justify-center lg:justify-end">
+                {/* touch-pan-y ensures vertical swiping inside the form isn't trapped */}
+                <form onSubmit={handleSubmit} className="w-full max-w-2xl space-y-6 touch-pan-y">
                   <input
                     type="text"
                     name="bot-field"
@@ -196,7 +202,8 @@ export default function Contact() {
                       rows={5}
                       value={formState.message}
                       onChange={(e) => setFormState({ ...formState, message: e.target.value })}
-                      className="w-full min-h-45 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:bg-white/8 transition-all resize-none"
+                      // text-base is critical here to prevent iOS zoom-on-focus bug
+                      className="w-full min-h-45 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-base text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:bg-white/8 transition-all resize-none"
                       placeholder="A short summary of your project or need"
                     />
                   </div>
@@ -212,7 +219,8 @@ export default function Contact() {
                         required
                         value={formState.name}
                         onChange={(e) => setFormState({ ...formState, name: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:bg-white/8 transition-all"
+                        // text-base is critical here to prevent iOS zoom-on-focus bug
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-base text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:bg-white/8 transition-all"
                         placeholder="John Doe"
                       />
                     </div>
@@ -227,7 +235,8 @@ export default function Contact() {
                         required
                         value={formState.email}
                         onChange={(e) => setFormState({ ...formState, email: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:bg-white/8 transition-all"
+                        // text-base is critical here to prevent iOS zoom-on-focus bug
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-base text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:bg-white/8 transition-all"
                         placeholder="john@example.com"
                       />
                     </div>
@@ -249,12 +258,12 @@ export default function Contact() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full rounded-2xl bg-sky-400 py-2.5 text-sm font-semibold uppercase tracking-[0.18em] text-slate-950 shadow-sm shadow-sky-500/10 transition-all duration-300 hover:bg-sky-300 active:scale-[0.98] disabled:opacity-50"
+                    className="w-full rounded-2xl bg-sky-400 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-950 shadow-sm shadow-sky-500/10 transition-all duration-300 hover:bg-sky-300 active:scale-[0.98] disabled:opacity-50"
                   >
-                    {isSubmitting ? 'Sending...' : 'Send'}
+                    {isSubmitting ? "Sending..." : "Send"}
                   </button>
 
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 text-center lg:text-left">
                     One message per minute, five per hour. Disposable email domains and bot traffic are blocked automatically.
                   </p>
                 </form>

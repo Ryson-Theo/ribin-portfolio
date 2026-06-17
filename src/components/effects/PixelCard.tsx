@@ -109,7 +109,7 @@ export default function PixelCard({
         className="
           absolute
           inset-0
-          bg-gradient-to-b
+          bg-linear-to-b
           from-white/6
           via-transparent
           to-transparent

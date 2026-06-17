@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Image from "next/image";
 import DotGrid from "@/components/effects/DotGrid";
 import { portfolio } from "@/data/portfolio";
@@ -8,39 +7,28 @@ import { Button } from "@/components/ui/button";
 import DecryptedText from "@/components/ui/DecryptedText";
 
 export default function Hero() {
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  // Safely detect layout size on the client to prevent interactive background scripts from loading on mobile
-  useEffect(() => {
-    const checkMatch = () => setIsDesktop(window.innerWidth >= 1024);
-    checkMatch();
-    window.addEventListener("resize", checkMatch);
-    return () => window.removeEventListener("resize", checkMatch);
-  }, []);
+  // Fix: Pad out strings so length-based array index decryption transitions seamlessly
+  const primaryText = "FULL STACK DEVELOPER";
+  const targetHoverName = portfolio.name.toUpperCase();
+  const normalizedHoverText = targetHoverName.padEnd(primaryText.length, " ");
 
   return (
     <section 
       id="hero" 
-      // REMOVED overflow-x-hidden from here to prevent mobile viewport boundary collapse
-      className="relative min-h-screen w-full bg-linear-to-b from-black via-[#040404] to-[#050305] text-white flex flex-col justify-center"
+      className="relative min-h-screen w-full bg-linear-to-b from-black via-[#040404] to-[#050305] text-white flex flex-col justify-center overflow-hidden"
     >
-      
-      {/* CRITICAL FIX: Changed from CSS hiding to structural React execution guard. 
-        DotGrid and its internal touch event listeners will now NEVER mount or execute on mobile screens.
-      */}
-      {isDesktop && (
-        <div className="absolute inset-0 opacity-60 pointer-events-none z-0">
-          <DotGrid
-            dotSize={1.8}
-            gap={22}
-            baseColor="#262626"
-            activeColor="#ffffff"
-            proximity={150}
-          />
-        </div>
-      )}
+      {/* Tailwind handles visibility via 'hidden lg:block', making server/client markup matching perfect. */}
+      <div className="hidden lg:block absolute inset-0 opacity-60 pointer-events-none z-0">
+        <DotGrid
+          dotSize={1.8}
+          gap={22}
+          baseColor="#262626"
+          activeColor="#ffffff"
+          proximity={150}
+        />
+      </div>
 
-      {/* Modern Noise & Radial Overlay */}
+      {/* Modern Radial Overlays */}
       <div className="absolute inset-0 pointer-events-none z-10">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.03),transparent_30%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent)] mix-blend-overlay" />
@@ -56,29 +44,23 @@ export default function Hero() {
               Based in Kerala, India
             </p>
 
-            <div className="group relative inline-block w-full">
-              <h1 className="relative font-heading uppercase leading-[0.85] tracking-[-0.04em] text-3xl sm:text-5xl md:text-[100px] lg:text-[120px] xl:text-[150px] transition-opacity duration-300 lg:group-hover:opacity-0">
-                FULL STACK
-                <br />
-                DEVELOPER
-              </h1>
-
-              {/* Decrypted Text Animated Layer - Safely limited via hidden lg:flex */}
-              <div className="absolute inset-0 items-center justify-start opacity-0 pointer-events-none transition-opacity duration-300 lg:group-hover:opacity-100 hidden lg:flex">
-                <DecryptedText
-                  text={portfolio.name}
-                  speed={35}
-                  maxIterations={18}
-                  sequential
-                  revealDirection="center"
-                  className="text-white font-semibold uppercase"
-                  encryptedClassName="text-zinc-500 uppercase"
-                  parentClassName="block lg:text-[110px] xl:text-[145px] font-heading uppercase leading-[0.85] tracking-[-0.08em]"
-                />
-              </div>
+            {/* Typography Wrapper (Added tracking tweaks and min-height boundary) */}
+            <div className="inline-block w-full select-none cursor-default min-h-[1.1em]">
+              <DecryptedText
+                text={primaryText}
+                hoverText={normalizedHoverText}
+                animateOn="hover"
+                speed={35}
+                maxIterations={12}
+                sequential
+                revealDirection="center"
+                className="text-white font-medium"
+                encryptedClassName="text-zinc-600 font-normal opacity-80"
+                parentClassName="block text-3xl sm:text-5xl md:text-[75px] lg:text-[95px] xl:text-[115px] font-heading uppercase leading-[0.9] tracking-tighter whitespace-pre-wrap break-words transition-all duration-300"
+              />
             </div>
 
-            <div className="mt-4 md:mt-6 text-lg sm:text-xl md:text-3xl text-zinc-300 font-medium opacity-95">
+            <div className="mt-6 md:mt-8 text-lg sm:text-xl md:text-3xl text-zinc-300 font-medium opacity-95">
               Interfaces ✦ Systems ✦ Intelligence
             </div>
 
@@ -108,7 +90,6 @@ export default function Hero() {
           {/* RIGHT COLUMN: Premium Card Avatar */}
           <div className="flex justify-center lg:justify-end lg:pr-8 order-0 lg:order-1 mt-2 lg:mt-0">
             <div className="relative w-60 h-72 sm:w-72 sm:h-96 md:w-80 md:h-104 rounded-[28px] overflow-hidden shadow-2xl lg:translate-x-6 lg:-translate-y-8 transform transition-all duration-500 group border border-white/15 backdrop-blur-sm">
-              
               <div className="absolute -inset-10 bg-white/5 blur-3xl rounded-[28px] pointer-events-none" />
 
               <Image
@@ -126,11 +107,8 @@ export default function Hero() {
                 <h3 className="text-base sm:text-lg font-semibold text-white">{portfolio.name}</h3>
                 <p className="text-xs sm:text-sm text-zinc-300">{portfolio.role}</p>
               </div>
-
             </div>
           </div>
-
-          <div className="w-full h-1 lg:hidden order-2" />
 
         </div>
       </div>

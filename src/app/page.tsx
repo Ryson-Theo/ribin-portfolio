@@ -11,10 +11,10 @@ import Footer from "@/components/sections/footer";
 
 export default function Home() {
   return (
-    <main className="w-full bg-black text-white">
+    <main className="w-full bg-black text-white selection:bg-white selection:text-black">
       <Navbar />
 
-      {/* CHANGED overflow-x-hidden to overflow-x-clip to restore native mobile touch scrolling */}
+      {/* overflow-x-clip prevents horizontal scroll without breaking mobile vertical touch */}
       <div className="relative w-full overflow-x-clip flex flex-col">
         <Hero />
         <About />

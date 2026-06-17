@@ -33,9 +33,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* 2. TOP SIDE-BY-SIDE CONTENT BLOCK 
-          FIXED: Changed max-w-7xl to w-full and optimized padding to push items 
-          further to the edges and slightly lower down the page */}
+      {/* 2. TOP SIDE-BY-SIDE CONTENT BLOCK */}
       <div className="relative w-full px-6 pt-14 lg:px-12 h-full z-10">
         <div className="flex flex-col md:flex-row justify-between items-start gap-6 w-full">
           {/* Left Side */}
@@ -73,7 +71,6 @@ export default function Footer() {
       {/* 3. UNIFIED BOTTOM STACK */}
       <div className="absolute bottom-0 left-0 w-full z-30 flex flex-col items-center pointer-events-none select-none">
         
-       
         <div className="w-full max-w-7xl px-8 lg:px-16 flex flex-col items-center gap-2 mb-2 pointer-events-auto">
           <a href="/additional-profiles" className="text-[11px] uppercase tracking-[0.35em] text-sky-300 hover:text-sky-200 transition-colors font-black">
             Additional Profiles
@@ -84,18 +81,16 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Name Layout with Edge-to-Edge Guard */}
+        {/* Name Layout */}
         <div className="relative w-full overflow-hidden px-4">
           <h1 className="text-[19.5vw] font-black text-white text-center tracking-[-0.06em] leading-[0.8] whitespace-nowrap block select-none">
             RIBIN K ROY
           </h1>
           
-         
           <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/40 to-transparent pointer-events-none" />
         </div>
       </div>
-
-     
+      
       <div className="absolute bottom-0 inset-x-0 h-12 bg-linear-to-t from-black to-transparent pointer-events-none z-20" />
 
     </footer>

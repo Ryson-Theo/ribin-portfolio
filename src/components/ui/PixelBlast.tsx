@@ -76,10 +76,6 @@ const int MAX_CLICKS = 10;
 uniform vec2 uClickPos[MAX_CLICKS];
 uniform float uClickTimes[MAX_CLICKS];
 
-float hash11(float n) {
-  return fract(sin(n) * 43758.5453);
-}
-
 float hash22(vec2 p) {
   return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
 }
@@ -200,10 +196,12 @@ const PixelBlast: React.FC<PixelBlastProps> = ({
   noiseAmount = 0,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const rafRef = useRef<number | null>(null);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
   const clickIndexRef = useRef(0);
   const startRef = useRef<number | null>(null);
+  const isVisibleRef = useRef(true);
 
+  // Core setup effect runs purely once on mount
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -215,7 +213,10 @@ const PixelBlast: React.FC<PixelBlastProps> = ({
     });
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    
+    // Caps high-DPI viewports at 2x to save GPU battery execution loops on mobile
+    const dpr = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2);
+    renderer.setPixelRatio(dpr);
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
@@ -232,7 +233,7 @@ const PixelBlast: React.FC<PixelBlastProps> = ({
         uColor: { value: new THREE.Color(color) },
         uResolution: { value: new THREE.Vector2(container.clientWidth, container.clientHeight) },
         uTime: { value: 0 },
-        uPixelSize: { value: pixelSize * renderer.getPixelRatio() },
+        uPixelSize: { value: pixelSize * dpr },
         uScale: { value: patternScale },
         uDensity: { value: patternDensity },
         uPixelJitter: { value: pixelSizeJitter },
@@ -251,6 +252,7 @@ const PixelBlast: React.FC<PixelBlastProps> = ({
         uClickTimes: { value: new Float32Array(MAX_CLICKS) },
       },
     });
+    materialRef.current = material;
 
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
     scene.add(quad);
@@ -264,20 +266,24 @@ const PixelBlast: React.FC<PixelBlastProps> = ({
     };
 
     resize();
-    const observer = new ResizeObserver(resize);
-    observer.observe(container);
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(container);
 
-    const updateTime = (time: number) => {
-      if (startRef.current === null) startRef.current = time;
-      const elapsed = (time - startRef.current) / 1000;
-      material.uniforms.uTime.value = elapsed * speed;
-    };
+    // Optional Visibility Observer handling frame pausing strategy
+    let intersectionObserver: IntersectionObserver | null = null;
+    if (autoPauseOffscreen) {
+      intersectionObserver = new IntersectionObserver(([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+      }, { threshold: 0.05 });
+      intersectionObserver.observe(container);
+    }
 
     const pointerDown = (event: PointerEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
       const x = (event.clientX - rect.left) * (renderer.domElement.width / rect.width);
       const y = (rect.height - (event.clientY - rect.top)) * (renderer.domElement.height / rect.height);
       const index = clickIndexRef.current % MAX_CLICKS;
+      
       const clickPos = material.uniforms.uClickPos.value as THREE.Vector2[];
       clickPos[index].set(x, y);
       (material.uniforms.uClickTimes.value as Float32Array)[index] = material.uniforms.uTime.value;
@@ -286,45 +292,61 @@ const PixelBlast: React.FC<PixelBlastProps> = ({
 
     renderer.domElement.addEventListener('pointerdown', pointerDown, { passive: true });
 
+    let rafId: number;
     const animate = (time: number) => {
-      updateTime(time);
+      rafId = requestAnimationFrame(animate);
+      
+      if (!isVisibleRef.current) return; // Skip work if canvas is dropped out of viewport range
+
+      if (startRef.current === null) startRef.current = time;
+      const elapsed = (time - startRef.current) / 1000;
+      material.uniforms.uTime.value = elapsed * speed;
+
       renderer.render(scene, camera);
-      rafRef.current = requestAnimationFrame(animate);
     };
 
-    rafRef.current = requestAnimationFrame(animate);
+    rafId = requestAnimationFrame(animate);
 
     return () => {
-      observer.disconnect();
+      resizeObserver.disconnect();
+      if (intersectionObserver) intersectionObserver.disconnect();
       renderer.domElement.removeEventListener('pointerdown', pointerDown);
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      cancelAnimationFrame(rafId);
+      
       quad.geometry.dispose();
       material.dispose();
       renderer.dispose();
+      
       if (renderer.domElement.parentElement === container) {
         container.removeChild(renderer.domElement);
       }
     };
+  }, [antialias, transparent, autoPauseOffscreen, color, pixelSize, patternScale, patternDensity, pixelSizeJitter, enableRipples, rippleSpeed, rippleThickness, rippleIntensityScale, edgeFade, variant, liquid, liquidStrength, liquidRadius, liquidWobbleSpeed, noiseAmount, speed]);
+
+  // Dynamic Uniform Hot Updates (Avoids thread context trashing on prop change)
+  useEffect(() => {
+    const mat = materialRef.current;
+    if (!mat) return;
+    mat.uniforms.uColor.value.set(color);
+    mat.uniforms.uPixelSize.value = pixelSize * (typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1);
+    mat.uniforms.uScale.value = patternScale;
+    mat.uniforms.uDensity.value = patternDensity;
+    mat.uniforms.uPixelJitter.value = pixelSizeJitter;
+    mat.uniforms.uEnableRipples.value = enableRipples ? 1 : 0;
+    mat.uniforms.uRippleSpeed.value = rippleSpeed;
+    mat.uniforms.uRippleThickness.value = rippleThickness;
+    mat.uniforms.uRippleIntensity.value = rippleIntensityScale;
+    mat.uniforms.uEdgeFade.value = edgeFade;
+    mat.uniforms.uShapeType.value = SHAPE_MAP[variant] ?? 0;
+    mat.uniforms.uLiquid.value = liquid ? 1 : 0;
+    mat.uniforms.uLiquidStrength.value = liquidStrength;
+    mat.uniforms.uLiquidRadius.value = liquidRadius;
+    mat.uniforms.uLiquidWobbleSpeed.value = liquidWobbleSpeed;
+    mat.uniforms.uNoiseAmount.value = noiseAmount;
   }, [
-    antialias,
-    color,
-    edgeFade,
-    enableRipples,
-    liquid,
-    liquidRadius,
-    liquidStrength,
-    liquidWobbleSpeed,
-    noiseAmount,
-    patternDensity,
-    patternScale,
-    pixelSize,
-    pixelSizeJitter,
-    rippleIntensityScale,
-    rippleSpeed,
-    rippleThickness,
-    speed,
-    transparent,
-    variant,
+    color, pixelSize, patternScale, patternDensity, pixelSizeJitter, enableRipples,
+    rippleSpeed, rippleThickness, rippleIntensityScale, edgeFade, variant, liquid,
+    liquidStrength, liquidRadius, liquidWobbleSpeed, noiseAmount
   ]);
 
   return <div ref={containerRef} className={`absolute inset-0 z-0 ${className}`} style={style} />;

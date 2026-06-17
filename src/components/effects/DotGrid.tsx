@@ -4,6 +4,7 @@ import {
   useEffect,
   useRef,
   useCallback,
+  useSyncExternalStore,
 } from "react";
 
 interface Dot {
@@ -29,9 +30,7 @@ interface DotGridProps {
 }
 
 function hexToRgb(hex: string) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(
-    hex
-  );
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 
   if (!result)
     return {
@@ -47,6 +46,11 @@ function hexToRgb(hex: string) {
   };
 }
 
+// Subscriptions for useSyncExternalStore to safe-check the client environment
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 export default function DotGrid({
   dotSize = 1.8,
   gap = 24,
@@ -59,11 +63,16 @@ export default function DotGrid({
   returnDuration = 1.8,
   className = "",
 }: DotGridProps) {
+  // Evaluates to false on the server, true on the client, zero effects/state required.
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    getClientSnapshot,
+    getServerSnapshot
+  );
+
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
   const dotsRef = useRef<Dot[]>([]);
-
   const mouseRef = useRef({
     x: -9999,
     y: -9999,
@@ -76,7 +85,6 @@ export default function DotGrid({
     if (!wrapper || !canvas) return;
 
     const rect = wrapper.getBoundingClientRect();
-
     const dpr = window.devicePixelRatio || 1;
 
     canvas.width = rect.width * dpr;
@@ -86,7 +94,6 @@ export default function DotGrid({
     canvas.style.height = `${rect.height}px`;
 
     const ctx = canvas.getContext("2d");
-
     if (!ctx) return;
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -110,27 +117,26 @@ export default function DotGrid({
   }, [gap]);
 
   useEffect(() => {
+    if (!mounted) return;
     buildGrid();
 
-    const resize = new ResizeObserver(() =>
-      buildGrid()
-    );
+    const resize = new ResizeObserver(() => buildGrid());
 
     if (wrapperRef.current) {
       resize.observe(wrapperRef.current);
     }
 
     return () => resize.disconnect();
-  }, [buildGrid]);
+  }, [buildGrid, mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
+
     const move = (e: MouseEvent) => {
       const canvas = canvasRef.current;
-
       if (!canvas) return;
 
       const rect = canvas.getBoundingClientRect();
-
       mouseRef.current = {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top,
@@ -151,9 +157,10 @@ export default function DotGrid({
       window.removeEventListener("mousemove", move);
       window.removeEventListener("mouseleave", leave);
     };
-  }, []);
+  }, [mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
     let frame: number;
 
     const base = hexToRgb(baseColor);
@@ -174,12 +181,7 @@ export default function DotGrid({
         return;
       }
 
-      ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const mx = mouseRef.current.x;
       const my = mouseRef.current.y;
@@ -187,31 +189,18 @@ export default function DotGrid({
       dotsRef.current.forEach((dot) => {
         const dx = dot.x - mx;
         const dy = dot.y - my;
-
-        const distance = Math.sqrt(
-          dx * dx + dy * dy
-        );
+        const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance < shockRadius) {
-          const force =
-            (1 - distance / shockRadius) *
-            shockStrength;
-
+          const force = (1 - distance / shockRadius) * shockStrength;
           const angle = Math.atan2(dy, dx);
 
           dot.vx += Math.cos(angle) * force;
           dot.vy += Math.sin(angle) * force;
         }
 
-        dot.vx +=
-          (dot.ox - dot.x) /
-          resistance *
-          returnDuration;
-
-        dot.vy +=
-          (dot.oy - dot.y) /
-          resistance *
-          returnDuration;
+        dot.vx += ((dot.ox - dot.x) / resistance) * returnDuration;
+        dot.vy += ((dot.oy - dot.y) / resistance) * returnDuration;
 
         dot.vx *= 0.92;
         dot.vy *= 0.92;
@@ -222,34 +211,17 @@ export default function DotGrid({
         let color = baseColor;
 
         if (distance < proximity) {
-          const t =
-            1 - distance / proximity;
+          const t = 1 - distance / proximity;
 
-          const r = Math.round(
-            base.r + (active.r - base.r) * t
-          );
-
-          const g = Math.round(
-            base.g + (active.g - base.g) * t
-          );
-
-          const b = Math.round(
-            base.b + (active.b - base.b) * t
-          );
+          const r = Math.round(base.r + (active.r - base.r) * t);
+          const g = Math.round(base.g + (active.g - base.g) * t);
+          const b = Math.round(base.b + (active.b - base.b) * t);
 
           color = `rgb(${r},${g},${b})`;
         }
 
         ctx.beginPath();
-
-        ctx.arc(
-          dot.x,
-          dot.y,
-          dotSize,
-          0,
-          Math.PI * 2
-        );
-
+        ctx.arc(dot.x, dot.y, dotSize, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
       });
@@ -269,6 +241,7 @@ export default function DotGrid({
     shockStrength,
     resistance,
     returnDuration,
+    mounted,
   ]);
 
   return (
@@ -276,10 +249,12 @@ export default function DotGrid({
       ref={wrapperRef}
       className={`absolute inset-0 pointer-events-none select-none ${className}`}
     >
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 h-full w-full pointer-events-none"
-      />
+      {mounted && (
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 h-full w-full pointer-events-none"
+        />
+      )}
     </div>
   );
 }

@@ -1,18 +1,25 @@
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
+
+interface CardProps extends React.ComponentProps<"div"> {
+  size?: "default" | "sm"
+  hasTopImage?: boolean
+}
 
 function Card({
   className,
   size = "default",
+  hasTopImage = false,
   ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+}: CardProps) {
   return (
     <div
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground shadow-xs ring-1 ring-foreground/10 [--card-spacing:--spacing(6)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)] *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card flex flex-col overflow-hidden rounded-xl bg-card text-sm text-card-foreground shadow-xs ring-1 ring-foreground/10",
+        "gap-(--card-spacing) py-(--card-spacing) [--card-spacing:--spacing(6)] data-[size=sm]:[--card-spacing:--spacing(4)]",
+        hasTopImage && "pt-0",
         className
       )}
       {...props}
@@ -20,12 +27,27 @@ function Card({
   )
 }
 
-function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+interface CardHeaderProps extends React.ComponentProps<"div"> {
+  hasAction?: boolean
+  hasDescription?: boolean
+}
+
+function CardHeader({ 
+  className, 
+  hasAction = false, 
+  hasDescription = false, 
+  ...props 
+}: CardHeaderProps) {
   return (
     <div
       data-slot="card-header"
+      data-has-action={hasAction || undefined}
+      data-has-description={hasDescription || undefined}
       className={cn(
-        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)",
+        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-(--card-spacing) [.border-b]:pb-(--card-spacing)",
+        // Fast, explicit data-attribute switches replace resource-heavy child component lookups
+        "data-[has-action=true]:grid-cols-[1fr_auto]",
+        "data-[has-description=true]:grid-rows-[auto_auto]",
         className
       )}
       {...props}

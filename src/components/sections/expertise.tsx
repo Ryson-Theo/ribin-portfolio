@@ -45,6 +45,7 @@ const CERTIFICATES_DATA = [
 
 export default function Qualifications() {
   const [activeCertIdx, setActiveCertIdx] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
   const nextCert = useCallback(() => {
     setActiveCertIdx((prev) => (prev + 1) % CERTIFICATES_DATA.length);
@@ -54,17 +55,20 @@ export default function Qualifications() {
     setActiveCertIdx((prev) => (prev - 1 + CERTIFICATES_DATA.length) % CERTIFICATES_DATA.length);
   };
 
+  // Auto-advance carousel, pausing if user is hovering over it
   useEffect(() => {
+    if (isHovered) return;
+    
     const interval = setInterval(() => {
       nextCert();
     }, 6000);
     return () => clearInterval(interval);
-  }, [nextCert]);
+  }, [nextCert, isHovered]);
 
   return (
     <section id="qualifications" className="relative z-10 py-32 bg-black text-zinc-100 overflow-hidden">
       
-      {/* Glow Backdrop: Fixed to valid arbitrary token syntax */}
+      {/* Glow Backdrop: Replaced invalid standard tokens with arbitrary values */}
       <div className="absolute bottom-0 right-0 w-150 h-150 max-w-full bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
       
       <div className="container mx-auto px-8 lg:px-20 relative z-10 max-w-7xl">
@@ -92,7 +96,7 @@ export default function Qualifications() {
             <div className="relative border-l border-zinc-800 pl-8 ml-2 space-y-12">
               {EDUCATION_DATA.map((edu, idx) => (
                 <div key={idx} className="relative group">
-                  {/* Fixed to explicit layout constraint class */}
+                  {/* Fixed arbitrary class for positioning */}
                   <div className="absolute -left-9.5 top-1.5 w-4 h-4 rounded-full bg-black border border-blue-500 transition-transform duration-300 group-hover:scale-125" />
                   
                   <div className="space-y-4">
@@ -118,7 +122,11 @@ export default function Qualifications() {
           </div>
 
           {/* 02 / AUTO CAROUSEL CERTIFICATIONS */}
-          <div className="max-w-3xl">
+          <div 
+            className="max-w-3xl"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
             <h4 className="text-xs font-mono font-bold tracking-[0.25em] text-zinc-500 uppercase mb-12 flex items-center gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
               02 / Certified Achievements
@@ -157,9 +165,9 @@ export default function Qualifications() {
               {/* Navigation buttons */}
               <div className="flex flex-wrap items-center gap-8 pt-8">
                 <div className="flex items-center gap-4 font-mono text-xs text-zinc-500">
-                  <button onClick={prevCert} className="hover:text-white transition-colors py-1 tracking-wider font-bold cursor-pointer">PREV</button>
+                  <button onClick={prevCert} aria-label="Previous Certificate" className="hover:text-white transition-colors py-1 tracking-wider font-bold cursor-pointer">PREV</button>
                   <span className="text-zinc-700">/</span>
-                  <button onClick={nextCert} className="hover:text-white transition-colors py-1 tracking-wider font-bold cursor-pointer">NEXT</button>
+                  <button onClick={nextCert} aria-label="Next Certificate" className="hover:text-white transition-colors py-1 tracking-wider font-bold cursor-pointer">NEXT</button>
                 </div>
 
                 <a 
@@ -199,10 +207,10 @@ export default function Qualifications() {
                     src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=Ryson-Theo&theme=github_dark" 
                     alt="GitHub Contributions Analytics"
                     fill
-                    sizes="(max-w-768px) 100vw, 50vw"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-contain object-left scale-105 origin-left"
                     unoptimized
-                    priority // 👈 Added to fix LCP warnings
+                    priority
                   />
                 </div>
               </div>
@@ -229,10 +237,10 @@ export default function Qualifications() {
                       src="https://holopin.me/ribinkroy" 
                       alt="Holopin Achievement Badges" 
                       fill
-                      sizes="(max-w-768px) 100vw, 50vw"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                       className="object-contain object-left scale-105 origin-left"
                       unoptimized
-                      priority // 👈 Added to fix LCP warnings
+                      priority
                     />
                   </a>
                 </div>

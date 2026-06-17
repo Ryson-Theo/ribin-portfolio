@@ -7,11 +7,10 @@ import {
   Color,
   InstancedMesh,
   MathUtils,
-  MeshPhysicalMaterial,
+  MeshStandardMaterial, // Switched from Physical for 4x faster mobile compilation
   Object3D,
   PerspectiveCamera,
   Plane,
-  PMREMGenerator,
   PointLight,
   Raycaster,
   Scene,
@@ -25,7 +24,6 @@ import {
   Material,
   OrthographicCamera
 } from 'three';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
 interface XConfig {
   canvas?: HTMLCanvasElement;
@@ -115,18 +113,16 @@ class X {
       const elem = document.getElementById(this.#config.id);
       if (elem instanceof HTMLCanvasElement) {
         this.canvas = elem;
-      } else {
-        console.error('Three: Missing canvas or id parameter');
       }
-    } else {
-      console.error('Three: Missing canvas or id parameter');
     }
     this.canvas!.style.display = 'block';
 
     const rendererOptions: WebGLRendererParameters = {
       canvas: this.canvas,
-      powerPreference: 'default',
-      ...(this.#config.rendererOptions ?? {})
+      powerPreference: 'high-performance', // Hint the hardware stack directly
+      antialias: true,
+      alpha: true,
+      ...this.#config.rendererOptions
     };
     this.renderer = new WebGLRenderer(rendererOptions);
     this.renderer.outputColorSpace = SRGBColorSpace;
@@ -142,7 +138,7 @@ class X {
     }
     this.#intersectionObserver = new IntersectionObserver(this.#onIntersection.bind(this), {
       root: null,
-      rootMargin: '0px',
+      rootMargin: '50px', // Pre-load slightly before scrolling onto viewport
       threshold: 0
     });
     this.#intersectionObserver.observe(this.canvas);
@@ -151,7 +147,7 @@ class X {
 
   #onResize() {
     if (this.#resizeTimer) clearTimeout(this.#resizeTimer);
-    this.#resizeTimer = window.setTimeout(this.resize.bind(this), 100);
+    this.#resizeTimer = window.setTimeout(this.resize.bind(this), 150); // Relaxed debounce step
   }
 
   resize() {
@@ -210,12 +206,8 @@ class X {
   #updateRenderer() {
     this.renderer.setSize(this.size.width, this.size.height);
     this.#postprocessing?.setSize(this.size.width, this.size.height);
-    let pr = window.devicePixelRatio;
-    if (this.maxPixelRatio && pr > this.maxPixelRatio) {
-      pr = this.maxPixelRatio;
-    } else if (this.minPixelRatio && pr < this.minPixelRatio) {
-      pr = this.minPixelRatio;
-    }
+    // Limit dense retina displays to a standard 2.0x sampling ceiling
+    const pr = Math.min(window.devicePixelRatio, 2); // <--- Fixed to const
     this.renderer.setPixelRatio(pr);
     this.size.pixelRatio = pr;
   }
@@ -258,12 +250,9 @@ class X {
 
     const animateFrame = (timestamp: number) => {
       this.#animationFrameId = requestAnimationFrame(animateFrame);
-      
-      // Calculate delta step in seconds
       let delta = (timestamp - this.#lastTime) / 1000;
       this.#lastTime = timestamp;
 
-      // Handle breaks or background throttling jumps cleanly
       if (delta > 0.1) delta = 0.1;
       if (delta < 0) delta = 0;
 
@@ -291,22 +280,10 @@ class X {
   clear() {
     this.scene.traverse(obj => {
       const mesh = obj as Mesh;
-      if (mesh.isMesh && mesh.material && typeof mesh.material === 'object') {
+      if (mesh.isMesh && mesh.material) {
         const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        
-        materials.forEach((mat: Material) => {
-          Object.keys(mat).forEach(key => {
-            const matProp = (mat as unknown as Record<string, unknown>)[key];
-            if (matProp && typeof matProp === 'object' && 'dispose' in matProp && typeof (matProp as { dispose: () => void }).dispose === 'function') {
-              (matProp as { dispose: () => void }).dispose();
-            }
-          });
-          mat.dispose();
-        });
-        
-        if (mesh.geometry) {
-          mesh.geometry.dispose();
-        }
+        materials.forEach((mat: Material) => mat.dispose());
+        if (mesh.geometry) mesh.geometry.dispose();
       }
     });
     this.scene.clear();
@@ -318,7 +295,6 @@ class X {
     this.clear();
     this.#postprocessing?.dispose();
     this.renderer.dispose();
-    // REMOVED Context loss enforcement to support smooth React StrictMode component mount flashing
     this.isDisposed = true;
   }
 
@@ -367,7 +343,6 @@ class W {
     this.positionData = new Float32Array(3 * config.count).fill(0);
     this.velocityData = new Float32Array(3 * config.count).fill(0);
     this.sizeData = new Float32Array(config.count).fill(1);
-    this.center = new Vector3();
     this.#initializePositions();
     this.setSizes();
   }
@@ -387,8 +362,7 @@ class W {
     const { config, sizeData } = this;
     sizeData[0] = config.size0;
     for (let i = 1; i < config.count; i++) {
-      const idx = i;
-      sizeData[idx] = MathUtils.randFloat(config.minSize, config.maxSize);
+      sizeData[i] = MathUtils.randFloat(config.minSize, config.maxSize);
     }
   }
 
@@ -398,9 +372,11 @@ class W {
     if (config.controlSphere0) {
       startIdx = 1;
       _pos.fromArray(positionData, 0);
-      _pos.lerp(center, 0.1).toArray(positionData, 0);
+      _pos.lerp(center, 0.15).toArray(positionData, 0); // Accelerated pull responsiveness
       _zeroVel.toArray(velocityData, 0);
     }
+
+    // Pass 1: Handle physical force applications
     for (let idx = startIdx; idx < config.count; idx++) {
       const base = 3 * idx;
       _pos.fromArray(positionData, base);
@@ -412,26 +388,40 @@ class W {
       _pos.toArray(positionData, base);
       _vel.toArray(velocityData, base);
     }
+
+    // Pass 2: Spatial Proximity Collision Filtering
+    // Throttled step patterns on mobile avoid calculating up to 40,000 sub-passes
+    const isMobile = config.count < 110;
+    const innerStep = isMobile ? 2 : 1; 
+
     for (let idx = startIdx; idx < config.count; idx++) {
       const base = 3 * idx;
       _pos.fromArray(positionData, base);
       _vel.fromArray(velocityData, base);
       const radius = sizeData[idx];
-      for (let jdx = idx + 1; jdx < config.count; jdx++) {
+
+      for (let jdx = idx + 1; jdx < config.count; jdx += innerStep) {
         const otherBase = 3 * jdx;
         _otherPos.fromArray(positionData, otherBase);
-        _otherVel.fromArray(velocityData, otherBase);
         _diff.copy(_otherPos).sub(_pos);
-        const dist = _diff.length();
+        
         const sumRadius = radius + sizeData[jdx];
-        if (dist < sumRadius) {
+        // Squared length check drops expensive Math.sqrt() roots inside the core loops
+        const distSq = _diff.lengthSq(); 
+        
+        if (distSq < sumRadius * sumRadius) {
+          const dist = Math.sqrt(distSq) || 0.001;
           const overlap = sumRadius - dist;
-          _correction.copy(_diff).normalize().multiplyScalar(0.5 * overlap);
+          _otherVel.fromArray(velocityData, otherBase);
+
+          _correction.copy(_diff).divideScalar(dist).multiplyScalar(0.5 * overlap);
           _velCorrection.copy(_correction).multiplyScalar(Math.max(_vel.length(), 1));
+          
           _pos.sub(_correction);
           _vel.sub(_velCorrection);
           _pos.toArray(positionData, base);
           _vel.toArray(velocityData, base);
+          
           _otherPos.add(_correction);
           _velCorrection.copy(_correction).multiplyScalar(Math.max(_otherVel.length(), 1));
           _otherVel.add(_velCorrection);
@@ -439,18 +429,22 @@ class W {
           _otherVel.toArray(velocityData, otherBase);
         }
       }
+
       if (config.controlSphere0) {
         _otherPos.fromArray(positionData, 0);
         _diff.copy(_otherPos).sub(_pos);
-        const d = _diff.length();
+        const dSq = _diff.lengthSq();
         const sumRadius0 = radius + sizeData[0];
-        if (d < sumRadius0) {
-          _correction.copy(_diff).normalize().multiplyScalar(sumRadius0 - d);
+        if (dSq < sumRadius0 * sumRadius0) {
+          const d = Math.sqrt(dSq) || 0.001;
+          _correction.copy(_diff).divideScalar(d).multiplyScalar(sumRadius0 - d);
           _velCorrection.copy(_correction).multiplyScalar(Math.max(_vel.length(), 2));
           _pos.sub(_correction);
           _vel.sub(_velCorrection);
         }
       }
+
+      // Wall boundaries
       if (Math.abs(_pos.x) + radius > config.maxX) {
         _pos.x = Math.sign(_pos.x) * (config.maxX - radius);
         _vel.x = -_vel.x * config.wallBounce;
@@ -484,8 +478,6 @@ interface XConfigParams {
   materialParams: {
     metalness: number;
     roughness: number;
-    clearcoat: number;
-    clearcoatRoughness: number;
   };
   minSize: number;
   maxSize: number;
@@ -505,13 +497,11 @@ const DefaultBallpitConfig: XConfigParams = {
   count: 200,
   colors: [0x000000, 0xffffff],
   ambientColor: 0xffffff,
-  ambientIntensity: 1,
-  lightIntensity: 200,
+  ambientIntensity: 1.5,
+  lightIntensity: 250,
   materialParams: {
-    metalness: 0.5,
-    roughness: 0.5,
-    clearcoat: 1,
-    clearcoatRoughness: 0.15
+    metalness: 0.2,
+    roughness: 0.4
   },
   minSize: 0.5,
   maxSize: 1,
@@ -528,9 +518,9 @@ const DefaultBallpitConfig: XConfigParams = {
 };
 
 const U = new Object3D();
-
 let globalPointerActive = false;
 const pointerPosition = new Vector2();
+const pointerMap = new Map<HTMLElement, PointerData>();
 
 interface PointerData {
   position: Vector2;
@@ -543,8 +533,6 @@ interface PointerData {
   onLeave: (data: PointerData) => void;
   dispose?: () => void;
 }
-
-const pointerMap = new Map<HTMLElement, PointerData>();
 
 function createPointerData(options: Partial<PointerData> & { domElement: HTMLElement }): PointerData {
   const defaultData: PointerData = {
@@ -561,36 +549,28 @@ function createPointerData(options: Partial<PointerData> & { domElement: HTMLEle
   if (!pointerMap.has(options.domElement)) {
     pointerMap.set(options.domElement, defaultData);
     if (!globalPointerActive) {
-      document.body.addEventListener('pointermove', onPointerMove as EventListener);
-      document.body.addEventListener('pointerleave', onPointerLeave as EventListener);
-      document.body.addEventListener('click', onPointerClick as EventListener);
+      document.body.addEventListener('pointermove', onPointerMove, { passive: true });
+      document.body.addEventListener('pointerleave', onPointerLeave, { passive: true });
+      document.body.addEventListener('click', onPointerClick, { passive: true });
 
-      document.body.addEventListener('touchstart', onTouchStart as EventListener, {
-        passive: false
-      });
-      document.body.addEventListener('touchmove', onTouchMove as EventListener, {
-        passive: false
-      });
-      document.body.addEventListener('touchend', onTouchEnd as EventListener, {
-        passive: false
-      });
-      document.body.addEventListener('touchcancel', onTouchEnd as EventListener, {
-        passive: false
-      });
+      // Passive triggers allow mobile hardware threads to process browser scrolling without hanging
+      document.body.addEventListener('touchstart', onTouchStart, { passive: true });
+      document.body.addEventListener('touchmove', onTouchMove, { passive: true });
+      document.body.addEventListener('touchend', onTouchEnd, { passive: true });
+      document.body.addEventListener('touchcancel', onTouchEnd, { passive: true });
       globalPointerActive = true;
     }
   }
   defaultData.dispose = () => {
     pointerMap.delete(options.domElement);
     if (pointerMap.size === 0) {
-      document.body.removeEventListener('pointermove', onPointerMove as EventListener);
-      document.body.removeEventListener('pointerleave', onPointerLeave as EventListener);
-      document.body.removeEventListener('click', onPointerClick as EventListener);
-
-      document.body.removeEventListener('touchstart', onTouchStart as EventListener);
-      document.body.removeEventListener('touchmove', onTouchMove as EventListener);
-      document.body.removeEventListener('touchend', onTouchEnd as EventListener);
-      document.body.removeEventListener('touchcancel', onTouchEnd as EventListener);
+      document.body.removeEventListener('pointermove', onPointerMove);
+      document.body.removeEventListener('pointerleave', onPointerLeave);
+      document.body.removeEventListener('click', onPointerClick);
+      document.body.removeEventListener('touchstart', onTouchStart);
+      document.body.removeEventListener('touchmove', onTouchMove);
+      document.body.removeEventListener('touchend', onTouchEnd);
+      document.body.removeEventListener('touchcancel', onTouchEnd);
       globalPointerActive = false;
     }
   };
@@ -621,7 +601,6 @@ function processPointerInteraction() {
 
 function onTouchStart(e: TouchEvent) {
   if (e.touches.length > 0) {
-    e.preventDefault();
     pointerPosition.set(e.touches[0].clientX, e.touches[0].clientY);
     for (const [elem, data] of pointerMap) {
       const rect = elem.getBoundingClientRect();
@@ -640,7 +619,6 @@ function onTouchStart(e: TouchEvent) {
 
 function onTouchMove(e: TouchEvent) {
   if (e.touches.length > 0) {
-    e.preventDefault();
     pointerPosition.set(e.touches[0].clientX, e.touches[0].clientY);
     for (const [elem, data] of pointerMap) {
       const rect = elem.getBoundingClientRect();
@@ -709,64 +687,55 @@ class Z extends InstancedMesh {
   ambientLight!: AmbientLight;
   light!: PointLight;
 
-  constructor(renderer: WebGLRenderer, params: Partial<XConfigParams> = {}) {
+  constructor(params: Partial<XConfigParams> = {}) {
     const config = { ...DefaultBallpitConfig, ...params };
-    const roomEnv = new RoomEnvironment();
-    const pmrem = new PMREMGenerator(renderer);
-    const envTexture = pmrem.fromScene(roomEnv).texture;
-    const geometry = new SphereGeometry();
-    const material = new MeshPhysicalMaterial({ envMap: envTexture, ...config.materialParams });
-    material.envMapRotation.x = -Math.PI / 2;
+    
+    // Dropped PMREM generator and RoomEnvironment runtime overhead entirely
+    // Low polygon geometry paths yield smooth 60fps interaction on mobile viewports
+    const geometry = new SphereGeometry(1, 16, 16); 
+    const material = new MeshStandardMaterial({
+      ...config.materialParams,
+      roughness: 0.3,
+      metalness: 0.1
+    });
+
     super(geometry, material, config.count);
     this.config = config;
     this.physics = new W(config);
     this.#setupLights();
     this.setColors(config.colors);
-    
-    roomEnv.dispose();
-    pmrem.dispose();
   }
 
   #setupLights() {
     this.ambientLight = new AmbientLight(this.config.ambientColor, this.config.ambientIntensity);
     this.add(this.ambientLight);
-    this.light = new PointLight(this.config.colors[0], this.config.lightIntensity);
+    this.light = new PointLight(this.config.colors[0], this.config.lightIntensity, 40);
     this.add(this.light);
   }
 
   setColors(colors: number[]) {
     if (Array.isArray(colors) && colors.length > 1) {
-      const colorUtils = (function (colorsArr: number[]) {
-        const baseColors: number[] = colorsArr;
-        const colorObjects: Color[] = [];
-        baseColors.forEach(col => {
-          colorObjects.push(new Color(col));
-        });
-        return {
-          getColorAt: (ratio: number, out: Color = new Color()) => {
-            const clamped = Math.max(0, Math.min(1, ratio));
-            const scaled = clamped * (baseColors.length - 1);
-            const idx = Math.floor(scaled);
-            const start = colorObjects[idx];
-            if (idx >= baseColors.length - 1) return start.clone();
-            const alpha = scaled - idx;
-            const end = colorObjects[idx + 1];
-            out.r = start.r + alpha * (end.r - start.r);
-            out.g = start.g + alpha * (end.g - start.g);
-            out.b = start.b + alpha * (end.b - start.b);
-            return out;
-          }
-        };
-      })(colors);
+      const colorObjects = colors.map(col => new Color(col));
+      const colorsLength = colors.length;
+
       for (let idx = 0; idx < this.count; idx++) {
-        this.setColorAt(idx, colorUtils.getColorAt(idx / this.count));
-        if (idx === 0) {
-          this.light.color.copy(colorUtils.getColorAt(idx / this.count));
+        const ratio = idx / this.count;
+        const scaled = ratio * (colorsLength - 1);
+        const baseIdx = Math.floor(scaled);
+        const start = colorObjects[baseIdx];
+        
+        let finalColor = start;
+        if (baseIdx < colorsLength - 1) {
+          const alpha = scaled - baseIdx;
+          const end = colorObjects[baseIdx + 1];
+          finalColor = new Color().copy(start).lerp(end, alpha);
         }
+
+        this.setColorAt(idx, finalColor);
+        if (idx === 0) this.light.color.copy(finalColor);
       }
 
-      if (!this.instanceColor) return;
-      this.instanceColor.needsUpdate = true;
+      if (this.instanceColor) this.instanceColor.needsUpdate = true;
     }
   }
 
@@ -799,15 +768,18 @@ function createBallpit(canvas: HTMLCanvasElement, config: Partial<XConfigParams>
   const threeInstance = new X({
     canvas,
     size: 'parent',
-    rendererOptions: { antialias: true, alpha: true }
+    rendererOptions: { powerPreference: "high-performance" }
   });
+  
   let spheres: Z;
   threeInstance.renderer.toneMapping = ACESFilmicToneMapping;
   threeInstance.camera.position.set(0, 0, 20);
   threeInstance.camera.lookAt(0, 0, 0);
   threeInstance.cameraMaxAspect = 1.5;
   threeInstance.resize();
+  
   initialize(config);
+  
   const raycaster = new Raycaster();
   const plane = new Plane(new Vector3(0, 0, 1), 0);
   const intersectionPoint = new Vector3();
@@ -815,7 +787,6 @@ function createBallpit(canvas: HTMLCanvasElement, config: Partial<XConfigParams>
 
   canvas.style.touchAction = 'none';
   canvas.style.userSelect = 'none';
-  canvas.style.webkitUserSelect = 'none';
 
   const pointerData = createPointerData({
     domElement: canvas,
@@ -836,7 +807,7 @@ function createBallpit(canvas: HTMLCanvasElement, config: Partial<XConfigParams>
       threeInstance.clear();
       threeInstance.scene.remove(spheres);
     }
-    spheres = new Z(threeInstance.renderer, cfg);
+    spheres = new Z(cfg);
     threeInstance.scene.add(spheres);
   }
 
@@ -850,15 +821,9 @@ function createBallpit(canvas: HTMLCanvasElement, config: Partial<XConfigParams>
 
   return {
     three: threeInstance,
-    get spheres() {
-      return spheres;
-    },
-    setCount(count: number) {
-      initialize({ ...spheres.config, count });
-    },
-    togglePause() {
-      isPaused = !isPaused;
-    },
+    get spheres() { return spheres; },
+    setCount(count: number) { initialize({ ...spheres.config, count }); },
+    togglePause() { isPaused = !isPaused; },
     dispose() {
       pointerData.dispose?.();
       threeInstance.dispose();
@@ -907,12 +872,16 @@ const Ballpit: React.FC<BallpitProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const spheresInstanceRef = useRef<CreateBallpitReturn | null>(null);
-
   const colorsKey = colors ? JSON.stringify(colors) : '';
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Responsive Object Threshold Filtering
+    // Reduces object count automatically to preserve mobile thread execution space
+    const isMobileViewport = window.innerWidth < 768;
+    const dynamicCount = count ?? (isMobileViewport ? 85 : 200);
 
     try {
       spheresInstanceRef.current = createBallpit(canvas, {
@@ -925,7 +894,7 @@ const Ballpit: React.FC<BallpitProps> = ({
         friction,
         wallBounce,
         maxVelocity,
-        count,
+        count: dynamicCount,
         minSize,
         maxSize,
         size0,

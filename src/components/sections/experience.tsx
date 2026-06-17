@@ -10,10 +10,10 @@ const EXPERIENCES_DATA = [
   {
     role: "Web Development Trainee",
     company: "Web Dev Open",
-    type: "Apprenticeship", // e.g., Full-time, Apprenticeship, Internship, Freelance
+    type: "Apprenticeship", 
     period: "Jun 2026 — Present",
     location: "Remote",
-    isActive: true, // If true, applies a vibrant accent indicator badge
+    isActive: true, 
     description: "Building real-world web applications through project-based learning while developing practical skills in modern web development, software engineering, and industry-standard workflows.",
     tags: ["MongoDB", "Express.js", "React", "Node.js", "Git"]
   },
@@ -56,27 +56,27 @@ export default function Experience() {
           <div className="lg:col-span-7 relative ml-2 md:ml-6">
             
             {/* Main Axis Track line - adapts length automatically based on item count */}
-            <div className={`absolute left-3 top-3 w-px-gradient-to-b from-blue-500 via-white/10 to-transparent ${
-              hasMultipleItems ? 'bottom-3 h-auto' : 'h-20'
+            <div className={`absolute left-3 top-3 w-px bg-linear-to-b from-blue-500 via-white/10 to-transparent ${
+              hasMultipleItems ? 'bottom-3' : 'h-20'
             }`} />
 
             {/* Render loop mapping the configuration template array */}
             <div className="space-y-8">
               {EXPERIENCES_DATA.map((exp, index) => (
-                <div key={exp.role + exp.company + index} className="relative pl-10 group">
+                <div key={`${exp.role}-${exp.company}-${index}`} className="relative pl-10 group">
                   
                   {/* Smart Indicator Node Accent Dot */}
                   <div className={`absolute left-3 top-3 w-2.5 h-2.5 rounded-full bg-slate-950 border-2 -translate-x-1/2 z-20 transition-all duration-300 ${
                     exp.isActive 
-                      ? 'border-blue-500 scale-115 shadow-[0_0_10px_rgba(168,85,247,0.6)] group-hover:scale-125' 
-                      : 'border-white/30 group-hover:border-blue-400 group-hover:scale-115'
+                      ? 'border-blue-500 scale-110 shadow-[0_0_10px_rgba(168,85,247,0.6)] group-hover:scale-125' 
+                      : 'border-white/30 group-hover:border-blue-400 group-hover:scale-110'
                   }`} />
 
                   {/* Clean Semantic Layout Block */}
                   <div className="animate-fade-in">
                     <div className="relative p-6 rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg backdrop-blur-3xl transition-all duration-300 group-hover:border-white/20 group-hover:bg-slate-950/60">
                       
-                      {/* Ambient Accent Light Overlay Overlay */}
+                      {/* Ambient Accent Light Overlay */}
                       <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none rounded-2xl" />
 
                       {/* Header Layout Setup */}

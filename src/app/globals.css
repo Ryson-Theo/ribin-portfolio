@@ -7,38 +7,32 @@
 
 html {
   scroll-behavior: smooth;
+  /* Prevents pull-to-refresh reload bouncing that feels like a freeze */
+  overscroll-behavior-y: none; 
 }
 
 body {
   background: #000;
   color: white;
-  font-family: Inter, sans-serif;
-  /* Removed overflow-x: hidden to fix mobile Safari/Chrome touch scrolling lockups */
+  font-family: var(--font-sans), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.project-scroll::-webkit-scrollbar {
+.project-scroll::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
   height: 0;
 }
 
-.project-scroll {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
+.project-scroll,
 .scrollbar-hide {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
 .font-heading,
-h1,
-h2,
-h3,
-h4 {
+h1, h2, h3, h4 {
   font-family: "Syne", sans-serif;
 }
 
@@ -47,59 +41,47 @@ h4 {
   font-style: italic;
 }
 
-::selection {
-  background: white;
-  color: black;
-}
-
+/* Background gradient optimized for mobile GPU */
 body::before {
   content: "";
-
   position: fixed;
-
   inset: 0;
-
-  background:
-    radial-gradient(
-      circle at top,
-      rgba(255,255,255,0.06),
-      transparent 60%
-    );
-
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.06), transparent 60%);
   pointer-events: none;
-
   z-index: -1;
+  transform: translateZ(0); /* Hardware acceleration */
+  will-change: transform;
 }
 
+/* Glass effect optimized */
 .glass {
-  background: rgba(255,255,255,0.03);
-
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
-
-  border: 1px solid rgba(255,255,255,0.08);
+  -webkit-backdrop-filter: blur(20px); /* Safari support */
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* Animations converted to 3D for hardware acceleration on mobile */
 @keyframes marquee {
   0% {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
-
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
 .marquee-track {
   animation: marquee 24s linear infinite;
+  will-change: transform;
 }
 
 @keyframes flow-menu {
   0% {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
-
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
@@ -111,18 +93,18 @@ body::before {
   display: inline-flex;
   gap: 1rem;
   animation: flow-menu 20s linear infinite;
+  will-change: transform;
 }
 
 /* LED indicator for project cards */
 @keyframes led-blink {
   0%, 100% {
     opacity: 0.25;
-    transform: scale(0.9);
+    transform: scale3d(0.9, 0.9, 1);
   }
-
   50% {
     opacity: 1;
-    transform: scale(1);
+    transform: scale3d(1, 1, 1);
   }
 }
 
@@ -138,15 +120,12 @@ body::before {
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
   animation-play-state: paused;
+  will-change: opacity, transform;
 }
 
-.led-dot[style] {
-  /* delay is passed inline via style attribute */
-}
-
-/* run LED when parent group is hovered */
 .group:hover .led-dot,
-.group:focus-within .led-dot {
+.group:focus-within .led-dot,
+.group:active .led-dot /* Added active for mobile taps */ {
   opacity: 1;
   animation-play-state: running;
 }
