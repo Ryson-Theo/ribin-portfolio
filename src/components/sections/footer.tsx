@@ -77,7 +77,7 @@ export default function Footer() {
           </a>
 
           <div className="w-full text-[10px] uppercase tracking-[0.3em] text-slate-400 text-center border-t border-white/10 pt-3 font-bold">
-            © {new Date().getFullYear()} • Built with Next.js, Tailwind, three.js
+            © {new Date().getFullYear()} Ribin K Roy• Built with Next.js, Tailwind, three.js
           </div>
         </div>
 
