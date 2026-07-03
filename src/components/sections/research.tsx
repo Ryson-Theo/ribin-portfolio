@@ -5,13 +5,13 @@
 // Add or update your published papers below.
 // =========================================================================
 const RESEARCH_DATA = {
-  title: "Autonomous Vehicle Research",
-  journal: "International Research Journal (IRJAEM)",
+  title: "Enhancing Autonomous Vehicle Safety and Efficiency Through Intelligent Mapping and Recommendations",
+  journal: "International Research Journal on Advanced Engineering and Management (IRJAEM)",
   year: "2024",
   doi: "10.47392/IRJAEM.2024.0532",
   paperUrl: "https://goldncloudpublications.com/index.php/irjaem/article/view/621",
-  abstract: "Co-authored research paper focusing on enhancing autonomous vehicle safety and efficiency through intelligent mapping architectures and advanced recommendation systems. The project addresses multi-modal navigation data processing and real-time environment routing optimization patterns.",
-  tags: ["AI Research", "Machine Learning", "Autonomous Systems", "Intelligent Mapping"]
+  abstract: "Awarded Best Presentation and Podium Distinction within the International Technical Presentation track. This co-authored research paper addresses multi-modal navigation data processing and real-time environment routing optimization. The study leverages sensor fusion, adaptive route planning, and real-time object detection architectures to significantly improve autonomous system navigational safety and operational efficiency.",
+  tags: ["AI Research", "Machine Learning", "Autonomous Systems", "Intelligent Mapping", "Award Winning"]
 };
 
 export default function Research() {
