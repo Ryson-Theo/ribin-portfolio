@@ -170,8 +170,8 @@ export default function Contact() {
                       <a href="https://x.com/Ryson_Theo" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-200 hover:text-sky-300 transition-colors">
                         Twitter ↗
                       </a>
-                      <a href="https://dribbble.com/Ryson_Theo" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-200 hover:text-sky-300 transition-colors">
-                        Dribbble ↗
+                      <a href="https://linktr.ee/ryson_theo" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-200 hover:text-sky-300 transition-colors">
+                        Socials & Links ↗
                       </a>
                     </div>
                   </div>
