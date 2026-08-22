@@ -14,6 +14,13 @@ const EDUCATION_DATA = [
 
 const CERTIFICATES_DATA = [
   {
+    title: "Claude Platform 101",
+    issuer: "Anthropic Education (Skilljar)",
+    date: "Aug. 22, 2026",
+    credentialUrl: "https://verify.skilljar.com/c/qs2r6zvo9vmt", // Replace with your exact verify URL
+    tags: ["Claude", "Anthropic", "AI Platforms", "LLMs"]
+  },
+  {
     title: "Legacy Responsive Web Design V8 Certification",
     issuer: "freeCodeCamp",
     date: "2025",
