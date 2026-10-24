@@ -16,10 +16,17 @@ const GitHubIcon = ({ className }: { className?: string }) => (
 
 const projects = [
   {
+    title: "Kazedesk",
+    description: "A local-first productivity workspace featuring focus timers, tasks, notes, maps, and music. Free to use, with no account required.",
+    source: "https://github.com/Ryson-Theo/Kazedesk",
+    live: "https://kazedesk.pages.dev/",
+    image: "https://github.com/Ryson-Theo/Kazedesk/blob/main/src/assets/screenshots/most%20of%20the%20widgets%20in%20dashboard.png",
+  },
+  {
     title: "Interactive Developer Portfolio",
     description: "Responsive, type-safe portfolio built with Next.js 16 and Tailwind. Instant static delivery, deployed on Vercel.",
     source: "https://github.com/Ryson-Theo/ribin-portfolio",
-    preview: "https://ribin-portfolio.vercel.app",
+    live: "https://ribin-portfolio.vercel.app",
     image: "/images/portfolio-preview.png",
   },
   {
