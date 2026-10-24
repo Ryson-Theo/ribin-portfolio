@@ -20,7 +20,7 @@ const projects = [
     description: "A local-first productivity workspace featuring focus timers, tasks, notes, maps, and music. Free to use, with no account required.",
     source: "https://github.com/Ryson-Theo/Kazedesk",
     live: "https://kazedesk.pages.dev/",
-    image: "https://github.com/Ryson-Theo/Kazedesk/blob/main/src/assets/screenshots/most%20of%20the%20widgets%20in%20dashboard.png",
+    image: "/images/kakedesk.png",
   },
   {
     title: "Interactive Developer Portfolio",
