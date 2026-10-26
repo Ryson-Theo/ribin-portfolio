@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Ribin K Roy | Full-Stack Developer",
   description: "Portfolio of Ribin K Roy - Full-Stack Developer creating modern digital products through design, engineering, and AI exploration.",
+  openGraph: {
+    siteName: "Ribin K Roy",
+  },
 };
 
 export default function RootLayout({
@@ -25,6 +28,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Ribin K Roy",
+    "url": "https://ribin-portfolio.vercel.app",
+  };
+
   return (
     <html
       lang="en"
@@ -36,6 +46,13 @@ export default function RootLayout({
         inter.variable
       )}
     >
+      <head>
+        {/* Injecting structured data into the head tag */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       {/* Optimized for mobile dynamic viewport height to prevent scroll jank */}
       <body className="min-h-dvh flex flex-col overscroll-none">
         {children}
